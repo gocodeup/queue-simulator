@@ -70,8 +70,8 @@ class Queue
 
     public function tick($time)
     {
-        $queueAdd = mt_rand(1, static::MODIFIER * cos(deg2rad($time % 360)) + static::MODIFIER + 1);
-        $queueRem = mt_rand(1, static::MODIFIER * sin(deg2rad($time % 360)) + static::MODIFIER + 1);
+        $queueAdd = mt_rand(1, static::MODIFIER * (cos(deg2rad($time % 360)) + 1) + 1);
+        $queueRem = mt_rand(1, static::MODIFIER * (sin(deg2rad($time % 360)) + 1) + 1);
 
         for ($i=0; $i < $queueRem; $i++) {
             $this->remove($time);
