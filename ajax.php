@@ -21,4 +21,4 @@ $data = array(
 
 $q->save();
 
-echo json_encode($data, JSON_NUMERIC_CHECK|JSON_PRETTY_PRINT);
+echo json_encode($data, JSON_NUMERIC_CHECK|JSON_PRETTY_PRINT) . PHP_EOL;
