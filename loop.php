@@ -18,6 +18,7 @@ Queue Simulator
                         Default: queue.dat
     -d | --delay      : Pause this many seconds between iterations
                         Default: 5
+    -c | --csv        : Output status information in CSV format
 
   Description:
     Queue Simulator emulates a customer qeueue. On each iteration a random
@@ -32,13 +33,14 @@ Queue Simulator
 USAGE;
 
 // Default values
-$filename = 'queue.dat';
-$delay    = 5;
-$limit    = 0;
-$count    = 0;
+$filename  = 'queue.dat';
+$delay     = 5;
+$limit     = 0;
+$count     = 0;
+$csvFormat = false;
 
 // Parse commandline options
-$options = getopt('hi:f:d:', array('help', 'iterations:', 'file:', 'delay:'));
+$options = getopt('hi:f:d:c', array('help', 'iterations:', 'file:', 'delay:', '--csv'));
 
 foreach ($options as $key => $value) {
     switch ($key) {
@@ -59,6 +61,10 @@ foreach ($options as $key => $value) {
             if (!ctype_digit($value)) die($usage);
             $delay = $value;
             break;
+        case 'c':
+        case 'csv':
+            $csvFormat = true;
+            break;
     }
 }
 
@@ -71,19 +77,30 @@ $q = new Queue($filename);
 $q->load();
 $q->calculateSkew($delay);
 
+if ($csvFormat) {
+    echo '"Net Change","Max Wait","Average Wait",Length,"Total Processed"' . PHP_EOL;
+} else {
+    echo "Net Change | Max Wait | Average Wait | Length | Total Processed\n";
+    echo "---------- + -------- + ------------ + ------ + ---------------\n";
+}
+
 // If limit is 0 just run forever
 while ($limit === 0 || $count < $limit) {
     $change = $q->tick();
 
-    // Default output format for net change
-    $chFormat = '%+d';
+    if ($csvFormat) {
+        $format = "%d,%01.4f,%01.4f,%d,%d\n";
+    } else {
+        // Default output format for net change
+        $chFormat = '%+10d';
 
-    // Don't output a sign value if net change is 0
-    if ($change == 0) {
-        $chFormat = ' %d';
+        // Don't output a sign value if net change is 0
+        if ($change == 0) {
+            $chFormat = '%10d';
+        }
+
+        $format = "$chFormat | %8.4f | %12.4f | %6d | %15d\n";
     }
-
-    $format = "Net Change: $chFormat | Max Wait: %07.4f | Average: %07.4f | Length: %3s | Total: %6s\n";
 
     printf($format, $change, $q->getMax(), $q->getAverage(), $q->getCount(), $q->getTotal());
 
