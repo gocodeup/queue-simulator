@@ -1,6 +1,6 @@
 # Customer Queue Simulator
 
-This application is a queue simulator. It is intended to emulate a customer queue, similar to a grocery store checkout or a phone support line. The simulation is runs as a sequence of "iterations". On each iteration, some random number of "customers" will be removed from the queue and then some random number will be added. These random numbers will roughly follow a sinusoidal progression, in order to emulate a natural rise and fall in demand and response. There are two  ways to run the simulation, `loop.php` or `ajax.php`.
+This application is a queue simulator. It is intended to emulate a customer queue, similar to a grocery store checkout or a phone support line. The simulation runs as a sequence of "iterations". On each iteration, some random number of "customers" will be removed from the queue and then some random number will be added. These random numbers will roughly follow a sinusoidal progression, in order to emulate a natural rise and fall in demand and response. There are two ways to run the simulation, `loop.php` or `ajax.php`.
 
 ## Running from the Command Line
 
@@ -13,7 +13,7 @@ Simulations can be run from the command line by executing `php loop.php`. By def
             +4 |        1 |       1.1667 |      9 |               6
     etc...
 
-Each row of the table is a snapshot of the queue data after that iteration. The columns are:
+Each row of the table is a snapshot of the queue data after a single iteration. The columns are:
 
 - `Net Change` &mdash; The net change in customers on the queue
 - `Max Wait` &mdash; How long the current oldest customer has been in the queue
@@ -42,7 +42,7 @@ Passing the flag `-h` or `--help` to `loop.php` will get you the following usage
         -c | --csv        : Output status information in CSV format
 
       Description:
-        Queue Simulator emulates a customer qeueue. On each iteration a random
+        Queue Simulator emulates a customer queue. On each iteration a random
         number of customers between 1 and 7 will be added to the queue, and some
         number will be removed. The queue uses sine and cosine functions to
         replicate a natural rise and fall in customer demand and response. Queue
@@ -50,7 +50,7 @@ Passing the flag `-h` or `--help` to `loop.php` will get you the following usage
         (if it exists). If no iteration limit is given, queue data is saved on each
         iteration, otherwise data is saved at the end of the simulation.
 
-The primary uses of `loop.php` is to experiment & test the simulators behavior, and to seed simulation data for `ajax.php`.
+The primary uses of `loop.php` is to experiment with & test the simulator's behavior, and to seed simulation data for `ajax.php`.
 
 ## Running via Ajax
 
