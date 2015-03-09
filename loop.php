@@ -24,7 +24,7 @@ Queue Simulator
     -c | --csv        : Output status information in CSV format
 
   Description:
-    Queue Simulator emulates a customer qeueue. On each iteration a random
+    Queue Simulator emulates a customer queue. On each iteration a random
     number of customers between 1 and 7 will be added to the queue, and some
     number will be removed. The queue uses sine and cosine functions to
     replicate a natural rise and fall in customer demand and response. Queue
