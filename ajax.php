@@ -6,8 +6,9 @@ define('QUEUE_FILE', 'queue.dat');
 
 $q = new Queue(QUEUE_FILE);
 $q->load();
+$q->calculateSkew(1);
 
-$change = $q->tick(time());
+$change = $q->tick();
 
 $data = array(
     'net_change' => $change,

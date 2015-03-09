@@ -69,10 +69,11 @@ if (!@touch($filename) || !is_writable($filename)) {
 // Start the queue!
 $q = new Queue($filename);
 $q->load();
+$q->calculateSkew($delay);
 
 // If limit is 0 just run forever
 while ($limit === 0 || $count < $limit) {
-    $change = $q->tick(time());
+    $change = $q->tick();
 
     // Default output format for net change
     $chFormat = '%+d';

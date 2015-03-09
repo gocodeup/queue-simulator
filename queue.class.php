@@ -23,6 +23,9 @@ class Queue
     /** @var string $filename File where queue data is saved */
     protected $filename;
 
+    /** @var int $skew Clock skew, compensates for gaps between queue runs */
+    protected $skew;
+
     /**
      * Modifier for random number generator.
      *
@@ -44,6 +47,7 @@ class Queue
         $this->queue   = array();
         $this->avgWait = 0;
         $this->total   = 0;
+        $this->skew    = 0;
 
         $this->filename = $filename;
     }
@@ -91,6 +95,15 @@ class Queue
         fclose($handle);
     }
 
+    public function calculateSkew($delay)
+    {
+        if (empty($this->queue)) {
+            $this->skew = 0;
+        } else {
+            $this->skew = time() - end($this->queue) - $delay;
+        }
+    }
+
     /**
      * Remove the oldest item from the queue and update the average wait time.
      *
@@ -136,8 +149,10 @@ class Queue
      * @see Queue::MODIFIER For details on random number range modifier
      * @return int Net change in queue length
      */
-    public function tick($time)
+    public function tick()
     {
+        $time = time() - $this->skew;
+
         // Add max errs on the "down" side, remove max on the "up" to better our odds of shrinking the queue
         $addMax    = round(static::MODIFIER * (cos(deg2rad($time)) + 1) + 1, 0, PHP_ROUND_HALF_DOWN);
         $removeMax = round(static::MODIFIER * (sin(deg2rad($time)) + 1) + 1, 0, PHP_ROUND_HALF_UP);
@@ -173,7 +188,7 @@ class Queue
             return 0;
         }
 
-        return microtime(true) - $this->queue[0];
+        return microtime(true) - $this->queue[0] - $this->skew;
     }
 
     /** @return int Count of items currently in queue */
