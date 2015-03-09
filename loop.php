@@ -16,7 +16,10 @@ Queue Simulator
                         Default: unlimited
     -f | --file       : Use this file to load/save queue data
                         Default: queue.dat
-    -d | --delay      : Pause this many seconds between iterations
+    -d | --delay      : Pause this many seconds between iterations. Passing 0
+                        causes the queue to run in pure simulation mode,
+                        emulating one second delay between iterations without
+                        actually pausing.
                         Default: 5
     -c | --csv        : Output status information in CSV format
 
@@ -84,9 +87,15 @@ if ($csvFormat) {
     echo "---------- + -------- + ------------ + ------ + ---------------\n";
 }
 
+$startTime = time();
+
 // If limit is 0 just run forever
 while ($limit === 0 || $count < $limit) {
-    $change = $q->tick();
+    if ($delay == 0) {
+        $change = $q->tick($startTime + $count);
+    } else {
+        $change = $q->tick();
+    }
 
     if ($csvFormat) {
         $format = "%d,%01.4f,%01.4f,%d,%d\n";
@@ -99,7 +108,7 @@ while ($limit === 0 || $count < $limit) {
             $chFormat = '%10d';
         }
 
-        $format = "$chFormat | %8.4f | %12.4f | %6d | %15d\n";
+        $format = "$chFormat | %8d | %12.4f | %6d | %15d\n";
     }
 
     printf($format, $change, $q->getMax(), $q->getAverage(), $q->getCount(), $q->getTotal());

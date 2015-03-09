@@ -26,6 +26,9 @@ class Queue
     /** @var int $skew Clock skew, compensates for gaps between queue runs */
     protected $skew;
 
+    /** @var int $time Current time, updated by tick() */
+    protected $time;
+
     /**
      * Modifier for random number generator.
      *
@@ -48,6 +51,7 @@ class Queue
         $this->avgWait = 0;
         $this->total   = 0;
         $this->skew    = 0;
+        $this->time    = time();
 
         $this->filename = $filename;
     }
@@ -95,12 +99,26 @@ class Queue
         fclose($handle);
     }
 
+    /**
+     * Calculate skew from loaded queue data.
+     *
+     * When starting a new simulation from cached data, this method will compensate for
+     * the delay between the previous run and the current one. This will avoid any spikes
+     * in the maximum wait time & subsequent average wait.
+     *
+     * @param int $delay Delay between iterations in seconds
+     * @return void
+     */
     public function calculateSkew($delay)
     {
+        if ($delay <= 0) {
+            $delay = 1;
+        }
+
         if (empty($this->queue)) {
             $this->skew = 0;
         } else {
-            $this->skew = time() - end($this->queue) - $delay;
+            $this->skew = $this->time - end($this->queue) - $delay;
         }
     }
 
@@ -109,10 +127,9 @@ class Queue
      *
      * If the queue is currently empty, nothing is done.
      *
-     * @param int $time Timestamp of when the item was removed
      * @return void
      */
-    public function remove($time)
+    protected function remove()
     {
         if (empty($this->queue)) {
             return;
@@ -122,19 +139,18 @@ class Queue
 
         $this->total++;
 
-        $this->avgWait -=  $this->avgWait / $this->total;
-        $this->avgWait += ($time - $item) / $this->total;
+        $this->avgWait -=        $this->avgWait / $this->total;
+        $this->avgWait += ($this->time - $item) / $this->total;
     }
 
     /**
      * Add a new item to the queue.
      *
-     * @param int $time Timestamp of when the item was added
      * @return void
      */
-    public function add($time)
+    protected function add()
     {
-        $this->queue[] = $time;
+        $this->queue[] = $this->time;
     }
 
     /**
@@ -142,20 +158,25 @@ class Queue
      *
      * Remove some random non-zero number of items from the queue.
      * Add some random non-zero number of items to the queue.
-     * Random numbers are based on sinusoidal functions of the time passed to emulate a natural
+     * Random numbers are based on sinusoidal functions of the time to emulate a natural
      * progression in demand and response.
+     * Time parameter can be used to run simulation immediately and "emulate" some delay.
      *
-     * @param int $time Timestamp of current tick
+     * @param int $time Optional timestamp of current tick
      * @see Queue::MODIFIER For details on random number range modifier
      * @return int Net change in queue length
      */
-    public function tick()
+    public function tick($time = 0)
     {
-        $time = time() - $this->skew;
+        $this->time = $time - $this->skew;
+
+        if ($this->time <= 0) {
+            $this->time = time() - $this->skew;
+        }
 
         // Add max errs on the "down" side, remove max on the "up" to better our odds of shrinking the queue
-        $addMax    = round(static::MODIFIER * (cos(deg2rad($time)) + 1) + 1, 0, PHP_ROUND_HALF_DOWN);
-        $removeMax = round(static::MODIFIER * (sin(deg2rad($time)) + 1) + 1, 0, PHP_ROUND_HALF_UP);
+        $addMax    = round(static::MODIFIER * (cos(deg2rad($this->time)) + 1) + 1, 0, PHP_ROUND_HALF_DOWN);
+        $removeMax = round(static::MODIFIER * (sin(deg2rad($this->time)) + 1) + 1, 0, PHP_ROUND_HALF_UP);
 
         // Both mins round half up so our minimum to remove will always be at least 1
         $addMin    = round(   $addMax / 2, 0, PHP_ROUND_HALF_UP);
@@ -165,11 +186,11 @@ class Queue
         $removeCount = mt_rand($removeMin, $removeMax);
 
         for ($i=0; $i < $removeCount; $i++) {
-            $this->remove($time);
+            $this->remove();
         }
 
         for ($i=0; $i < $addCount; $i++) {
-            $this->add($time);
+            $this->add();
         }
 
         return $addCount - $removeCount;
@@ -188,7 +209,7 @@ class Queue
             return 0;
         }
 
-        return microtime(true) - $this->queue[0] - $this->skew;
+        return $this->time - $this->queue[0];
     }
 
     /** @return int Count of items currently in queue */
