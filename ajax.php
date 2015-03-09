@@ -6,7 +6,7 @@ define('QUEUE_FILE', 'queue.dat');
 
 $q = new Queue(QUEUE_FILE);
 $q->load();
-$q->calculateSkew(1);
+$q->calculateSkew();
 
 $change = $q->tick();
 

@@ -109,7 +109,7 @@ class Queue
      * @param int $delay Delay between iterations in seconds
      * @return void
      */
-    public function calculateSkew($delay)
+    public function calculateSkew($delay = 0)
     {
         if ($delay <= 0) {
             $delay = 1;
@@ -168,10 +168,10 @@ class Queue
      */
     public function tick($time = 0)
     {
-        $this->time = $time - $this->skew;
-
-        if ($this->time <= 0) {
+        if ($time <= 0) {
             $this->time = time() - $this->skew;
+        } else {
+            $this->time = $time - $this->skew;
         }
 
         // Add max errs on the "down" side, remove max on the "up" to better our odds of shrinking the queue
