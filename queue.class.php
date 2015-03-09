@@ -138,18 +138,26 @@ class Queue
      */
     public function tick($time)
     {
-        $queueAdd = mt_rand(1, static::MODIFIER * (cos(deg2rad($time)) + 1) + 1);
-        $queueRem = mt_rand(1, static::MODIFIER * (sin(deg2rad($time)) + 1) + 1);
+        // Add max errs on the "down" side, remove max on the "up" to better our odds of shrinking the queue
+        $addMax    = round(static::MODIFIER * (cos(deg2rad($time)) + 1) + 1, 0, PHP_ROUND_HALF_DOWN);
+        $removeMax = round(static::MODIFIER * (sin(deg2rad($time)) + 1) + 1, 0, PHP_ROUND_HALF_UP);
 
-        for ($i=0; $i < $queueRem; $i++) {
+        // Both mins round half up so our minimum to remove will always be at least 1
+        $addMin    = round(   $addMax / 2, 0, PHP_ROUND_HALF_UP);
+        $removeMin = round($removeMax / 2, 0, PHP_ROUND_HALF_UP);
+
+        $addCount    = mt_rand(   $addMin,    $addMax);
+        $removeCount = mt_rand($removeMin, $removeMax);
+
+        for ($i=0; $i < $removeCount; $i++) {
             $this->remove($time);
         }
 
-        for ($i=0; $i < $queueAdd; $i++) {
+        for ($i=0; $i < $addCount; $i++) {
             $this->add($time);
         }
 
-        return $queueAdd - $queueRem;
+        return $addCount - $removeCount;
     }
 
     /** @return float Average wait time on queue */
